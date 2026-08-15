@@ -1,0 +1,21 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: kakeibo-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: kakeibo
+      MYSQL_USER: kakeibo
+      MYSQL_PASSWORD: kakeibo
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - kakeibo_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  kakeibo_mysql_data:

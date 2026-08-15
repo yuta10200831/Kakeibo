@@ -1,0 +1,45 @@
+---
+description: Kakeibo のアーキテクチャと開発条件（DDD / Immutable / TDD / 層構成）
+alwaysApply: true
+---
+
+# Kakeibo 開発ルール
+
+## 開発条件
+
+1. **Clean Architecture** — 依存は内側へだけ向ける
+2. **DDD（軽量）** — 家計ルールは `domain` に閉じる。集約は少数に抑える
+3. **イミュータブルモデリング** — Domain は `data class` + `val` のみ。変更は `copy()`。`var` / setter 禁止
+4. **TDD** — 機能追加はテスト先行。Red → Green → Refactor
+
+## パッケージと依存
+
+```text
+rest → usecase → port ← driver
+              ↘ domain ↗
+```
+
+| 層 | 役割 | 禁止 |
+|----|------|------|
+| `rest` | Ktor Route / DTO / HTTP | SQL、集計ロジック |
+| `usecase` | 手続き、port 呼び出し | SQL、HTTP詳細 |
+| `port` | Repository などの interface | 実装・SQL |
+| `domain` | model / service / exception | Ktor / Exposed / JSON |
+| `driver` | Exposed / MySQL で port 実装 | 業務判断（特別FLGの意味など） |
+
+- `rest` は `usecase` だけ呼ぶ（`port` / `driver` 直呼び禁止）
+- `domain` は外の技術を知らない
+- 永続化後の ID 付与も `copy(id = generated)` で行う
+
+## Phase 1 の TDD 順
+
+```text
+port → usecase（InMemory）→ driver → rest → 受け入れ
+```
+
+Phase 1 対象: Category / Transaction / MonthlySummary（FixedCost apply は Phase 2）
+
+## 参照
+
+- 要件: `01_要件定義書.md`
+- 設計: `02_設計書.md`
